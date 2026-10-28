@@ -15,6 +15,7 @@ function wire(pts,c,r){add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts
 window.build=function(){
 while(root.children.length)root.remove(root.children[0]);
 const [f,m,p,fc,e,v,c,r,b,g]=sel(),pr=f[2],wb=f[1],mn=f[4],at=pr>=6?6:pr>=4.5?5:pr>=3?3:2,aw=pr>=6?18:pr>=4.5?16:pr>=3?10:8,bl=60+pr*9,bw=f[3]+14,sb=f[3]+6,sp=f[3]/2,H=Math.max(34,27+v[4]),eT=7.8,fT=16.8,Rp=p[1]*25.4/2,L=wb/2,k=mn/Math.SQRT2,rb=k+3.5,SP=[1,-1,-1,1],MP=[[1,1],[1,-1],[-1,1],[-1,-1]],sq=[[1,1],[1,-1],[-1,1],[-1,-1]];
+const motorHeight = Math.min(m[2], 17);
 // ---- frame plates
 const bs=new THREE.Shape();bs.moveTo(-bw*.3,bl/2);bs.lineTo(bw*.3,bl/2);bs.lineTo(bw/2,bl*.3);bs.lineTo(bw/2,-bl*.3);bs.lineTo(bw*.3,-bl/2);bs.lineTo(-bw*.3,-bl/2);bs.lineTo(-bw/2,-bl*.3);bs.lineTo(-bw/2,bl*.3);bs.closePath();
 sq.forEach(([a,z])=>hole(bs,a*sp,z*sp,1.7));slot(bs,0,bl*.34,bw*.35,7);slot(bs,0,-bl*.34,bw*.35,7);plate(bs,at,-at/2,K,CF);
@@ -24,21 +25,21 @@ sq.forEach(([a,z])=>{cy(2.5,H+3+at/2,0xff7a1a,a*sp,(H+3-at/2)/2,z*sp,{metalness:
 const as=new THREE.Shape();as.moveTo(0,-aw*.6);as.lineTo(L*.62,-aw*.42);as.lineTo(L,-rb);as.absarc(L,0,rb,-Math.PI/2,Math.PI/2,false);as.lineTo(L*.62,aw*.42);as.lineTo(0,aw*.6);as.closePath();
 hole(as,L,0,4.3);[[k,0],[-k,0],[0,k],[0,-k]].forEach(([u,w])=>hole(as,L+u,w,1.2));slot(as,L*.4,0,L*.3,aw*.25);
 const ag=ext(as,at),cw=p[1]*2.6,bsh=new THREE.Shape();bsh.moveTo(3,-2.5);bsh.quadraticCurveTo(Rp*.5,-cw*.95,Rp-1,-cw*.22);bsh.quadraticCurveTo(Rp+1,0,Rp-1,cw*.22);bsh.quadraticCurveTo(Rp*.6,cw*.4,3,2.5);bsh.closePath();const bg0=ext(bsh,1.2);
-MP.forEach(([sx,sz],i)=>{const mx=sx*L/Math.SQRT2,mz=sz*L/Math.SQRT2,A=Math.atan2(mz,mx),ux=Math.cos(A),uz=Math.sin(A),vx=Math.sin(A),vz=-Math.cos(A),top=at/2+m[2],col=SP[i]>0?0xff7a1a:0x2fc7ff,y0=at/2;
+MP.forEach(([sx,sz],i)=>{const mx=sx*L/Math.SQRT2,mz=sz*L/Math.SQRT2,A=Math.atan2(mz,mx),ux=Math.cos(A),uz=Math.sin(A),vx=Math.sin(A),vz=-Math.cos(A),top=at/2+motorHeight,col=SP[i]>0?0xff7a1a:0x2fc7ff,y0=at/2;
 add(ag,K,0,-at/2,0,CF,null,[0,-A,0]).position.set(0,-at/2,0);
 cy(m[1]*.46,2.5,0x8a8f98,mx,y0+1.25,mz,{metalness:.8,roughness:.3},null,null,40);
 [[k,0],[-k,0],[0,k],[0,-k]].forEach(([u,w])=>cy(1.5,1.2,0x222,mx+u*ux+w*vx,y0+3.1,mz+u*uz+w*vz,{metalness:.8},null,null,6));
-cy(m[1]*.36,5,0xb87333,mx,y0+5,mz,{metalness:.6,roughness:.4});
-const hb=m[2]-7;cy(m[1]/2,hb,0x4a5560,mx,y0+7+hb/2,mz,{metalness:.75,roughness:.3},null,null,48);
-[.3,.62].forEach(t=>cy(m[1]/2+.15,.7,0x1c2026,mx,y0+7+hb*t,mz,null,null,null,48));
+cy(m[1]*.36,4,0xb87333,mx,y0+4,mz,{metalness:.6,roughness:.4});
+const hb=motorHeight-6;cy(m[1]/2,hb,0x4a5560,mx,y0+6+hb/2,mz,{metalness:.75,roughness:.3},null,null,48);
+[.3,.62].forEach(t=>cy(m[1]/2+.15,.7,0x1c2026,mx,y0+6+hb*t,mz,null,null,null,48));
 cy(m[1]*.3,.4,0x22262c,mx,top+.2,mz,null,null,null,32);
 for(let q2=0;q2<6;q2++){const a=q2*Math.PI/3;cy(1.8,.5,BK,mx+Math.cos(a)*m[1]*.38,top+.2,mz+Math.sin(a)*m[1]*.38,null,null,null,10)}
-cy(1.5,9,SIL,mx,top+3.5,mz,{metalness:.9,roughness:.2},null,null,12);
+cy(1.5,7,SIL,mx,top+2.5,mz,{metalness:.9,roughness:.2},null,null,12);
 const gp=new THREE.Group();gp.position.set(mx,top+1.5,mz);root.add(gp);cy(6,3,col,0,0,0,null,gp);
 for(let q2=0;q2<p[2];q2++){const bg=new THREE.Group();bg.rotation.y=q2*2*Math.PI/p[2];add(bg0,col,0,-.6,0,{transparent:true,opacity:.88,roughness:.4},bg,[SP[i]*.3,0,0]);gp.add(bg)}
 cy(4.2,3,col,mx,top+4.8,mz,{metalness:.8,roughness:.3},null,null,6);
 [YEL,BLU,PUR].forEach((wc,j)=>{const o2=(j-1)*1.6;wire([[mx-ux*m[1]*.4+o2*vx,y0+3,mz-uz*m[1]*.4+o2*vz],[mx*.5+o2*vx,y0+1.2,mz*.5+o2*vz],[sx*(sb/2-2),eT+.9,sz*sb*.2+(j-1)*3.5]],wc,.5+pr*.06)});
-lab('M'+(i+1),mx,top+18,mz)});
+lab('M'+(i+1),mx,top+16,mz)});
 // ---- ESC board
 const bd=(y,col)=>{const s=rr(sb,sb,3);sq.forEach(([a,z])=>hole(s,a*sp,z*sp,1.7));plate(s,1.6,y,col,{roughness:.45,metalness:.2})};
 bd(6.2,0x0d3b22);bd(15.2,0x15183a);
