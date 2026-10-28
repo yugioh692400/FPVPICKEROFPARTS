@@ -56,13 +56,13 @@ const fp=(x,z,cc)=>{bx(2.2,.4,2.2,GOLD,x,fT+.2,z);if(cc!=null)ball(x,fT+.2,z)},c
 for(let i=0;i<4;i++){fp(-sb/2+2,-sb/2+5+i*3.6,1);fp(-sb/2+2,2+i*3.6,g.length>1?1:null);fp(sb/2-2,-sb/2+5+i*3.6,1)}
 fp(sb/2-2,3,1);fp(sb/2-2,6.6,1);fp(-3,-sb/2+2,1);fp(3,-sb/2+2,1);for(let i=0;i<8;i++)fp(-11.2+i*3.2,sb/2-2);
 // ---- receiver, buzzer, wires
-const rxz=sb/2+8;bx(10,1,14,0x1a1a1a,10,12.5,rxz);bx(4,1,4,BK,10,13.4,rxz);cy(.8,48,0x222,10,12.8,rxz+30,null,null,[Math.PI/2,0,0],8);cy(.9,12,RED,10,12.8,rxz+7,null,null,[Math.PI/2,0,0],8);
+const rxz=sb/2+8;bx(10,1,14,0x1a1a1a,10,12.5,rxz);bx(4,1,4,BK,10,13.4,rxz);
 for(let i=0;i<4;i++)wire([[-sb/2+2,fT+.5,-sb/2+5+i*3.6],[-sb/2-6,14,-5+i*3],[8+i*.8,12.9,rxz-4]],cr[i],.3);
 cy(6,8,BK,-8,9,-sb/2-6,{roughness:.8});cy(1,.3,0x333,-8,13.2,-sb/2-6);wire([[-3,fT+.5,-sb/2+2],[-5,13,-sb/2-2],[-6,9,-sb/2-4]],RED,.3);wire([[3,fT+.5,-sb/2+2],[0,11,-sb/2-4],[-10,9,-sb/2-4]],BK,.3);
 // ---- VTX
 bx(v[2],1.6,v[3],0x161616,0,24.8,0);bx(v[2]*.7,v[4]-2,v[3]*.7,SIL,0,25.6+(v[4]-2)/2,0,{metalness:.9,roughness:.25});
 if(v[1]!='a')for(let i=0;i<5;i++)bx(.8,2.5,v[3]*.7,0x888c94,-v[2]*.25+i*v[2]*.125,25.6+v[4]-1,0,{metalness:.8});
-cy(1.5,2,GOLD,0,25,v[3]/2+1,{metalness:.9},null,[Math.PI/2,0,0]);wire([[0,25,v[3]/2+1],[0,23,bl/2],[-8,22,bl/2+8]],BK,.6);cy(1,6,GOLD,-8,22,bl/2+10,{metalness:.9},null,[Math.PI/2,0,0]);cy(.9,48,BK,-8,22.5,bl/2+36,null,null,[Math.PI/2,0,0],8);
+cy(1.5,2,GOLD,0,25,v[3]/2+1,{metalness:.9},null,[Math.PI/2,0,0]);wire([[0,25,v[3]/2+1],[0,23,bl/2],[-8,22,bl/2+8]],BK,.6);
 for(let i=0;i<4;i++)wire([[sb/2-2,fT+.5,-sb/2+5+i*3.6],[sb/2+4,fT+5,-8+i*3],[v[2]/2-2,25.6,-v[3]/2+4+i*2]],cr[i],.3);
 // ---- camera + cable
 const cg=new THREE.Group(),cz=-bl/2+c[3]/2+2,cyy=at/2+c[2]/2+2;cg.position.set(0,cyy,cz);cg.rotation.x=.44;root.add(cg);
