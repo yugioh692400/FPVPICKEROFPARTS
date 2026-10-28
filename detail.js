@@ -1,4 +1,4 @@
-/* Render quality + extra detail layer on top of models.js */
+/* Render quality + extra detail layer */
 (function(){
 const ob=window.build,SIL=0xc4c8ce,GOLD=0xd4a017,BK=0x111114,MC={};
 R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFSoftShadowMap;R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.2;R.outputEncoding=THREE.sRGBEncoding;
