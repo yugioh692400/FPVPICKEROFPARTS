@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FPV Drone Builder</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px system-ui,Arial,sans-serif;background:#10141a;color:#e6eaf0;height:100vh;display:grid;grid-template-columns:340px 1fr}
+aside{padding:14px;overflow:auto;background:#1a2029;border-right:1px solid #2b3440}
+h1{font-size:18px;margin:0 0 10px;color:#ff7a1a}label{display:block;font-size:12px;color:#8a96a6;margin-top:9px}
+select{width:100%;padding:6px;background:#10141a;color:#e6eaf0;border:1px solid #3a4655;border-radius:6px}
+#info{margin-top:14px;font-size:12px;line-height:1.5}#info div{margin:3px 0}
+section{display:flex;flex-direction:column;min-width:0}
+.bar{display:flex;gap:8px;padding:8px;background:#1a2029;border-bottom:1px solid #2b3440;flex-wrap:wrap}
+button{background:#2b3440;color:#e6eaf0;border:0;padding:7px 12px;border-radius:6px;cursor:pointer}button.on{background:#ff7a1a;color:#000}
+#view{flex:1;position:relative;min-height:0}#c3,#wire{position:absolute;inset:0}#cv{width:100%;height:100%;display:block;touch-action:none}
+#wire{display:none;overflow:auto;background:#f4f6f8;color:#111;padding:10px}#wire svg{width:100%;max-width:1000px;display:block;margin:auto}
+#wire ul{font-size:13px;max-width:1000px;margin:10px auto}
+@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 70vh;height:auto}}
+</style></head><body>
+<aside><h1>FPV Drone Builder</h1><div id="sel"></div><div id="info"></div></aside>
+<section>
+<div class="bar"><button id="tv" class="on">3D model</button><button id="tw">Wiring diagram</button><span style="flex:1"></span>
+<button id="eo">Download OBJ (mm)</button><button id="es">Download wiring SVG</button></div>
+<div id="view"><div id="c3"><canvas id="cv"></canvas></div><div id="wire"></div></div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- PARTS DATABASE (dimensions in mm, approximate published specs) ----------
+ Add parts by appending rows. Field order is noted for each category. */
+const D={
+// frame: name, wheelbase, propIn, stackMount, motorMount, grams
+frame:[['iFlight Nazgul5 V3 5"',225,5,30.5,16,98],['TBS Source One V5 5"',225,5,30.5,16,93],['GEPRC Mark5 5"',225,5,30.5,16,108],['ImpulseRC Apex 5"',225,5,30.5,16,112],['iFlight Protek35 3.5"',150,3.5,25.5,12,48],['Generic 3" X-frame (20mm)',135,3,20,12,32],['GEPRC Mark4 7"',295,7,30.5,16,142],['iFlight Chimera7 Pro 7"',295,7,30.5,16,170],['TBS Source One V5 7"',295,7,30.5,16,160]],
+// motor: name, bellDia, height, mount, grams, [minS,maxS]
+motor:[['iFlight XING2 2207 1855KV',28,31,16,32,[4,6]],['T-Motor Velox V3 2207 1950KV',28,31,16,31,[4,6]],['T-Motor F60 Pro V 2207 1750KV',28,31,16,31,[4,6]],['BrotherHobby Returner R5 2306 2550KV',28,30,16,32,[3,4]],['EMAX ECO II 2306 2400KV',28,30,16,32,[4,6]],['EMAX ECO II 2807 1300KV',34,32,16,41,[4,6]],['T-Motor Velox 2806.5 1300KV',34,32,16,40,[4,6]],['iFlight XING 1404 3800KV',17,19,12,17,[3,4]]],
+// prop: name, diameterIn, blades, grams
+prop:[['HQProp 5x4.3x3',5,3,4.3],['Gemfan Hurricane 51466-3',5.1,3,4.4],['HQProp Ethix S5 5.1x3.1x3',5.1,3,4.3],['HQProp 5x4.3x4 (4-blade)',5,4,5.3],['HQProp 3.5x3.5x3',3.5,3,2],['Gemfan 3028-3 3"',3,3,1.6],['HQProp 7x4x3',7,3,7.5],['Gemfan 7040-3',7,3,7.4]],
+// fc: name, stackMount, mcu, grams
+fc:[['SpeedyBee F405 V4',30.5,'F405',11],['Holybro Kakute H7 V2',30.5,'H743',8],['iFlight BLITZ F722',30.5,'F722',9],['Matek H743-SLIM V3',30.5,'H743',9],['SpeedyBee F405 Mini',25.5,'F405',6],['Flywoo GOKU F405 Mini',25.5,'F405',6],['Holybro Kakute H7 Mini',20,'H743',5]],
+// esc: name, stackMount, amps, grams, [minS,maxS]
+esc:[['SpeedyBee BLS 50A 4-in-1',30.5,50,13,[3,6]],['T-Motor F55A Pro II',30.5,55,12,[3,6]],['iFlight BLITZ E55 55A',30.5,55,14,[3,6]],['Holybro Tekko32 F4 50A',30.5,50,13,[3,6]],['Hobbywing XRotor Micro 60A',30.5,60,12,[3,6]],['SpeedyBee BLS 35A Mini',25.5,35,8,[3,6]],['Flywoo GOKU 35A Mini',25.5,35,8,[3,6]],['Holybro Tekko32 Mini 35A',20,35,5,[3,6]]],
+// vtx: name, type(a=analog,dji,ws=Walksnail,hdz=HDZero), w, l, h, grams
+vtx:[['TBS Unify Pro32 HV','a',22,28,6,7],['Rush Tank Ultimate Plus','a',30,30,8,9],['SpeedyBee TX800','a',29,29,7,6],['DJI O3 Air Unit','dji',36,41,14,36],['Walksnail Avatar HD Pro','ws',30,36,10,21],['HDZero Freestyle V2','hdz',28,28,8,10]],
+// cam: name, w, h, depth, grams, type
+cam:[['Caddx Ratel 2',19,19,22,9,'a'],['RunCam Phoenix 2',19,19,24,8,'a'],['Foxeer Razer Mini',19,19,22,9,'a'],['DJI O3 camera (Air Unit)',20,20,20,0,'dji'],['Walksnail Avatar HD Pro camera',19,19,20,0,'ws'],['HDZero Micro V2',19,19,22,7,'hdz']],
+// rx: name, protocol, grams
+rx:[['BetaFPV ELRS Nano 2.4GHz','CRSF/ELRS',0.7],['RadioMaster RP2 ELRS','CRSF/ELRS',1.2],['Happymodel EP2 ELRS','CRSF/ELRS',1],['TBS Crossfire Nano RX','CRSF',1],['TBS Tracer Nano','CRSF',1],['FrSky R-XSR','SBUS/F.Port',1.5]],
+// bat: name, cells, mAh, length, width, height, grams
+bat:[['Tattu R-Line 4S 1300mAh',4,1300,75,36,30,160],['GNB 4S 1500mAh 120C',4,1500,76,36,34,185],['Tattu FunFly 4S 1800mAh',4,1800,77,37,38,215],['Tattu R-Line 6S 1400mAh',6,1400,75,40,46,250],['CNHL Black 6S 1100mAh',6,1100,75,36,42,200],['Lumenier N2O 6S 1500mAh',6,1500,77,40,48,265],['Tattu 4S 850mAh (3")',4,850,70,31,28,100]],
+// gps: name, length, width, height, grams
+gps:[['None'],['Beitian BN-220',22,20,6,6],['Beitian BN-880 (compass)',28,28,10,8],['Matek M10Q-5883',16,16,6,5],['Holybro M10 Mini',18,18,7,6]]
+};
+const C=[['frame','Frame'],['motor','Motors (x4)'],['prop','Propellers (x4)'],['fc','Flight controller'],['esc','4-in-1 ESC'],['vtx','Video transmitter'],['cam','FPV camera'],['rx','Receiver'],['bat','Battery'],['gps','GPS (optional)']];
+const s={},q=i=>document.getElementById(i);
+C.forEach(([k,l])=>{s[k]=0;const L=document.createElement('label');L.textContent=l;const e=document.createElement('select');D[k].forEach((it,i)=>e.add(new Option(it[0],i)));e.onchange=()=>{s[k]=+e.value;update()};L.append(e);q('sel').append(L)});
+const sel=()=>C.map(([k])=>D[k][s[k]]);
+
+/* ---------- compatibility + weight ---------- */
+function info(){const [f,m,p,fc,e,v,c,r,b,g]=sel(),o=[];
+const t=(ok,a,w)=>o.push(ok?'✅ '+a:'⚠️ '+w);
+t(f[3]==fc[1]&&f[3]==e[1],`Stack mount ${f[3]}mm OK`,`Stack mismatch: frame ${f[3]}, FC ${fc[1]}, ESC ${e[1]} mm`);
+t(m[3]==f[4],`Motor mount ${m[3]}x${m[3]}mm OK`,`Motor mount ${m[3]}mm vs frame ${f[4]}mm`);
+t(Math.abs(p[1]-f[2])<=.3,`Prop size fits ${f[2]}" frame`,`Prop ${p[1]}" vs frame ${f[2]}"`);
+t(b[1]>=e[4][0]&&b[1]<=e[4][1],`ESC supports ${b[1]}S`,`ESC is rated ${e[4][0]}-${e[4][1]}S, battery is ${b[1]}S`);
+t(b[1]>=m[5][0]&&b[1]<=m[5][1],`Motor suits ${b[1]}S`,`Motor is typically ${m[5][0]}-${m[5][1]}S, battery is ${b[1]}S`);
+t(c[5]==v[1],'Camera and VTX system match','Camera ('+c[5]+') and VTX ('+v[1]+') are different video systems');
+const w=f[5]+4*m[4]+4*p[3]+fc[3]+e[3]+v[5]+c[4]+r[2]+b[6]+(g[4]||0)+30;
+q('info').innerHTML=o.map(x=>`<div>${x}</div>`).join('')+`<div style="margin-top:10px"><b>Approx. all-up weight:</b> ${Math.round(w)} g<br>(includes ~30 g wires, screws, straps)</div><div style="margin-top:10px;color:#8a96a6">Models are parametric from approximate published dimensions. Always verify against the manufacturer's manual.</div>`}
+
+/* ---------- 3D ---------- */
+const cv=q('cv'),R=new THREE.WebGLRenderer({canvas:cv,antialias:true}),sc=new THREE.Scene(),cm=new THREE.PerspectiveCamera(40,1,1,3000),root=new THREE.Group();
+sc.background=new THREE.Color(0x151a22);sc.add(root,new THREE.GridHelper(500,50,0x3a4655,0x242c38),new THREE.HemisphereLight(0xffffff,0x334455,.9));
+const dl1=new THREE.DirectionalLight(0xffffff,.8);dl1.position.set(150,300,200);sc.add(dl1);
+const mt=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.55,metalness:.15},o));
+const B=(w,h,d)=>new THREE.BoxGeometry(w,h,d),Y=(r,h,n=28)=>new THREE.CylinderGeometry(r,r,h,n);
+function ad(g,c,x,y,z,rx=0,ry=0,rz=0,par=root,o){const m=new THREE.Mesh(g,mt(c,o));m.position.set(x,y,z);m.rotation.set(rx,ry,rz);par.add(m);return m}
+function lab(t,x,y,z){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#fff';g.font='bold 34px sans-serif';g.textAlign='center';g.fillText(t,32,44);const p=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));p.scale.set(16,16,1);p.position.set(x,y,z);root.add(p)}
+function build(){
+while(root.children.length)root.remove(root.children[0]);
+const [f,m,p,fc,e,v,c,r,b,g]=sel(),K=0x1b1c20,GOLD=0xd4a017,pr=f[2],wb=f[1],at=pr>=6?6:pr>=4.5?5:3,aw=pr>=4.5?16:10,bl=60+pr*9,bw=f[3]+14,sz=f[3]+6,H=Math.max(34,27+v[4]);
+ad(B(bw,at,bl),K,0,0,0);ad(B(bw-4,3,bl*.72),K,0,H+1.5,0);
+[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(([a,z])=>ad(Y(2.5,H),0xb0b4ba,a*f[3]/2,H/2,z*f[3]/2,0,0,0,root,{metalness:.8}));
+// arms, motors, props (Betaflight default: M1 rear-right CCW, M2 front-right CW, M3 rear-left CW, M4 front-left CCW)
+const MP=[[1,1],[1,-1],[-1,1],[-1,-1]],SP=[1,-1,-1,1],Rp=p[1]*25.4/2;
+MP.forEach(([sx,sz],i)=>{const mx=sx*wb/2/Math.SQRT2,mz=sz*wb/2/Math.SQRT2,top=at/2+m[2];
+ad(B(wb/2,at,aw),K,mx/2,0,mz/2,0,-Math.atan2(mz,mx),0);
+ad(Y(m[1]*.4,5),0x999999,mx,at/2+2.5,mz);
+ad(Y(m[1]/2,m[2]-5),0x4a5560,mx,at/2+5+(m[2]-5)/2,mz,0,0,0,root,{metalness:.7,roughness:.35});
+ad(Y(4,5,6),SP[i]>0?0xff7a1a:0x2fc7ff,mx,top+2.5,mz);
+const gp=new THREE.Group();gp.position.set(mx,top+4,mz);root.add(gp);
+for(let k=0;k<p[2];k++){const bg=new THREE.Group();bg.rotation.y=k*2*Math.PI/p[2];ad(B(Rp-4,1.1,p[1]*2.4),SP[i]>0?0xff7a1a:0x2fc7ff,(Rp+4)/2,0,0,SP[i]*.28,0,0,bg,{transparent:true,opacity:.85});gp.add(bg)}
+lab('M'+(i+1),mx,top+16,mz)});
+// stack boards
+ad(B(sz,1.6,sz),0x174d2b,0,7,0);ad(B(sz,1.6,sz),0x24367a,0,16,0);ad(B(8,1,8),0x111,0,17.3,0);
+ad(Y(5,12),0x222,0,13,sz/2+4);
+ad(B(v[2],v[4],v[3]),0x444a52,0,24+v[4]/2,0);
+for(const [y,h] of [[7,sz/2],[16,sz/2]])for(let j=-3;j<=3;j++){for(const sg of[-1,1]){ad(B(2.4,.5,2.4),GOLD,sg*(h-2),y+.9,j*4.2);ad(B(2.4,.5,2.4),GOLD,j*4.2,y+.9,sg*(h-2))}}
+ad(B(5,.5,5),GOLD,-6,7.9,sz/2-4);ad(B(5,.5,5),GOLD,6,7.9,sz/2-4);
+// camera (25 deg uptilt)
+const cg=new THREE.Group();cg.position.set(0,at/2+c[2]/2+2,-bl/2+c[3]/2+2);cg.rotation.x=.44;root.add(cg);
+ad(B(c[1],c[2],c[3]),0x2a2d33,0,0,0,0,0,0,cg);ad(Y(c[1]*.33,5),0x0a0a14,0,0,-c[3]/2-2,Math.PI/2,0,0,cg,{metalness:.8});
+// rx, buzzer, antennas
+ad(B(12,3,15),0x333,0,12,sz/2+9);ad(Y(6,8),0x111,-14,12,sz/2+8);
+ad(Y(.9,55,8),0x222,-10,22,bl/2+27,Math.PI/2);ad(Y(.8,50,8),0x888,10,12,bl/2+22,Math.PI/2);
+// battery
+const by=H+4+b[5]/2;ad(B(b[4],b[5],b[3]),0x2457c5,0,by,0);ad(B(b[4]+2,b[5]+2,10),0x222,0,by,0);ad(B(8,5,16),0xf5c400,0,by,b[3]/2+8);
+if(g.length>1){const ty=by+b[5]/2;ad(B(g[2],g[3],g[1]),0x222,0,ty+g[3]/2,b[3]/2-g[1]/2-4);ad(B(g[2]-4,.8,g[1]-4),0xd8d8c0,0,ty+g[3]+.4,b[3]/2-g[1]/2-4)}
+}
+let th=.8,ph=1.1,rad=380,dr=null;
+cv.onpointerdown=e=>{dr=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)};
+cv.onpointermove=e=>{if(!dr)return;th-=(e.clientX-dr[0])*.008;ph=Math.min(3,Math.max(.1,ph-(e.clientY-dr[1])*.008));dr=[e.clientX,e.clientY]};
+cv.onpointerup=()=>dr=null;
+cv.addEventListener('wheel',e=>{e.preventDefault();rad=Math.min(900,Math.max(80,rad*(1+e.deltaY*.001)))},{passive:false});
+function rs(){const w=cv.parentElement.clientWidth,h=cv.parentElement.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cm.aspect=w/h;cm.updateProjectionMatrix()}
+addEventListener('resize',rs);
+(function loop(){requestAnimationFrame(loop);cm.position.set(rad*Math.sin(ph)*Math.sin(th),rad*Math.cos(ph),rad*Math.sin(ph)*Math.cos(th));cm.lookAt(0,20,0);R.render(sc,cm)})();
+
+/* ---------- WIRING DIAGRAM ---------- */
+let svg='';
+function wiring(){
+const [f,m,p,fc,e,v,c,r,b,g]=sel(),gps=g.length>1;let o='';
+const bx=(x,y,w,h,fill,t,t2,ty=-18)=>{o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${fill}" stroke="#333" stroke-width="1.5"/><text x="${x+w/2}" y="${y+ty}" text-anchor="middle" font-weight="bold" font-size="${t.length>20?9.5:12}">${t}</text><text x="${x+w/2}" y="${y+ty+13}" text-anchor="middle" fill="#555" font-size="10">${t2}</text>`};
+const wr=(pts,col,w=2.6)=>{o+=`<polyline points="${pts.map(a=>a.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round"/>`};
+const pd=(x,y,l,a)=>{const A={s:[x+9,y+4,'start',11],e:[x-9,y+4,'end',11],u:[x,y-9,'middle',9],d:[x,y+17,'middle',9]}[a];o+=`<circle cx="${x}" cy="${y}" r="5" fill="#d4a017" stroke="#7a5a00"/><text x="${A[0]}" y="${A[1]}" text-anchor="${A[2]}" font-size="${A[3]}">${l}</text>`};
+const RED='#d22',BLK='#111',YEL='#e8b400',GRN='#1a9a3a',BLU='#1c6bd8',PUR='#8a3ac8';
+o+=`<text x="30" y="30" font-size="14" font-weight="bold">Wiring: ${f[0]} build</text><circle cx="30" cy="44" r="5" fill="#d4a017" stroke="#7a5a00"/><text x="42" y="48" font-size="11">= solder pad (labels are the usual Betaflight names; match to your board's silkscreen)</text>`;
+bx(330,70,240,220,'#dfe8f7',fc[0],fc[2]+' · '+fc[1]+'mm stack',110);
+bx(330,345,240,155,'#dff0e3',e[0],`4-in-1 · ${e[2]}A · ${e[4][0]}-${e[4][1]}S`,70);
+bx(30,100,130,95,'#f3f3f3',r[0],r[1]+' receiver');
+bx(740,100,130,110,'#f3f3f3',v[0],{a:'analog',dji:'DJI digital',ws:'Walksnail',hdz:'HDZero'}[v[1]]+' VTX');
+bx(740,255,130,85,'#f3f3f3',c[0],'FPV camera');
+bx(390,560,120,70,'#fff4d6','LiPo '+b[1]+'S '+b[2]+'mAh','XT60',40);
+if(gps)bx(30,212,130,80,'#f3f3f3',g[0],'GPS (UART)');
+// motors
+const MO=[['M1',810,470,'CCW','rear-right'],['M2',810,380,'CW','front-right'],['M3',90,470,'CW','rear-left'],['M4',90,380,'CCW','front-left']];
+MO.forEach(([n,x,y,d,pos])=>{o+=`<circle cx="${x}" cy="${y}" r="32" fill="#e8e8ee" stroke="#333" stroke-width="2"/><text x="${x}" y="${y+5}" text-anchor="middle" font-weight="bold" font-size="14">${n}</text><text x="${x}" y="${y+50}" text-anchor="middle" font-size="10">${d} · ${pos}</text>`});
+const PC=[YEL,BLU,PUR];
+MO.forEach(([n,x,y],i)=>{const left=x<400;[-15,0,15].forEach((d,j)=>{wr(left?[[x+26,y+d],[330,y+d]]:[[570,y+d],[x-26,y+d]],PC[j]);pd(left?330:570,y+d,n+' '+'ABC'[j],left?'s':'e')})});
+// receiver
+[['5V','5V',RED,110],['G','GND',BLK,135],['T2','RX',YEL,160],['R2','TX',GRN,185]].forEach(([a,l,col,y])=>{wr([[160,y],[330,y]],col);pd(330,y,a,'s');pd(160,y,l,'e')});
+// gps
+if(gps)[['5V','5V',RED,224],['G','GND',BLK,241],['T4','RX',YEL,258],['R4','TX',GRN,275]].forEach(([a,l,col,y])=>{wr([[160,y],[330,y]],col);pd(330,y,a,'s');pd(160,y,l,'e')});
+// vtx
+[['VBAT/9V',v[1]=='a'?'V+ (9V/VBAT)':'VBAT',RED,112],['G','GND',BLK,130],['T3','RX / SA',YEL,148],['R3','TX',GRN,166]].forEach(([a,l,col,y])=>{wr([[570,y],[740,y]],col);pd(570,y,a,'e');pd(740,y,l,'s')});
+// camera
+wr([[740,270],[715,270],[715,190],[740,190]],YEL);pd(740,190,'VID IN','s');pd(740,270,'VID','s');
+wr([[570,225],[665,225],[665,290],[740,290]],RED);pd(570,225,'5V','e');pd(740,290,'5V','s');
+wr([[570,245],[650,245],[650,310],[740,310]],BLK);pd(570,245,'G','e');pd(740,310,'GND','s');
+// buzzer
+o+=`<circle cx="415" cy="30" r="18" fill="#ddd" stroke="#333"/><text x="415" y="33" text-anchor="middle" font-size="9">BUZZ</text>`;
+wr([[400,70],[400,46]],RED);wr([[430,70],[430,46]],BLK);pd(400,70,'BZ+','d');pd(430,70,'BZ-','d');
+// FC<->ESC harness
+['VBAT','G','CUR','TLM','M1','M2','M3','M4'].forEach((l,i)=>{const x=345+i*24;wr([[x,290],[x,345]],'#777',2);pd(x,290,l,'u');pd(x,345,l,'d')});
+// battery + cap
+o+=`<rect x="438" y="440" width="24" height="30" rx="3" fill="#333"/><text x="450" y="459" text-anchor="middle" font-size="8" fill="#fff">CAP</text>`;
+wr([[420,500],[420,560]],RED,5);wr([[480,500],[480,560]],BLK,5);pd(420,500,'BAT+','u');pd(480,500,'BAT-','u');pd(420,560,'+','d');pd(480,560,'−','d');
+svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650" font-family="Arial,sans-serif"><rect width="900" height="650" fill="#fff"/>${o}</svg>`;
+q('wire').innerHTML=svg+`<ul><li>Battery XT60 → ESC <b>BAT+/BAT-</b> pads; solder a low-ESR capacitor (≈35V, 470–1000µF) directly across them, as close as possible.</li><li>Each motor's three wires go to its three ESC pads. Swapping any two wires reverses the spin direction (or reverse it in BLHeli/Bluejay config).</li><li>Spin directions shown are Betaflight default (props-in): M1 CCW, M2 CW, M3 CW, M4 CCW.</li><li>TX on one device always connects to RX on the other. The FC's 5V pads power the receiver, GPS and camera; check the pad for 9V/VBAT availability for your VTX (${v[0]}).</li><li>UART numbers (T2/R2, T3/R3, T4/R4) are the common convention; many boards use different UARTs. Confirm against ${fc[0]}'s official pinout and set the matching ports in Betaflight.</li><li>Video: camera VID → VTX VID IN${v[1]!='a'?' (digital systems often use the supplied plug-in cable instead)':''}.</li></ul>`}
+
+/* ---------- UI ---------- */
+function update(){info();build();wiring()}
+const show=w=>{q('c3').style.display=w?'block':'none';q('wire').style.display=w?'none':'block';q('tv').className=w?'on':'';q('tw').className=w?'':'on';rs()};
+q('tv').onclick=()=>show(1);q('tw').onclick=()=>show(0);
+const dl=(blob,n)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=n;a.click()};
+q('es').onclick=()=>dl(new Blob([svg],{type:'image/svg+xml'}),'fpv-wiring.svg');
+q('eo').onclick=()=>{root.updateMatrixWorld(true);let t='# FPV drone model, units mm\n',n=1;root.traverse(o=>{if(!o.isMesh)return;const g=o.geometry,p=g.attributes.position,ix=g.index,v=new THREE.Vector3();t+='o part'+o.id+'\n';for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);t+=`v ${v.x.toFixed(3)} ${v.y.toFixed(3)} ${v.z.toFixed(3)}\n`}const c=ix?ix.count:p.count;for(let i=0;i<c;i+=3){const a=ix?ix.getX(i):i,b=ix?ix.getX(i+1):i+1,d=ix?ix.getX(i+2):i+2;t+=`f ${n+a} ${n+b} ${n+d}\n`}n+=p.count});dl(new Blob([t]),'fpv-drone.obj')};
+</script>
+<script src="parts.js"></script>
+<script src="models.js"></script>
+<script>update();rs();</script></body></html>
