@@ -14,7 +14,7 @@ const plate=(s,t,y,c,o)=>add(ext(s,t),c,0,y,0,o);
 function wire(pts,c,r){add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p[0],p[1],p[2]))),24,r,6,false),c,0,0,0,{roughness:.8})}
 window.build=function(){
 while(root.children.length)root.remove(root.children[0]);
-const [f,m,p,fc,e,v,c,r,b,g]=sel(),pr=f[2],wb=f[1],mn=f[4],at=pr>=6?6:pr>=4.5?5:pr>=3?3:2,aw=pr>=6?18:pr>=4.5?16:pr>=3?10:8,bl=60+pr*9,bw=f[3]+14,sb=f[3]+6,sp=f[3]/2,H=Math.max(34,27+v[4]),eT=7.8,fT=16.8,Rp=p[1]*25.4/2,L=wb/2,k=mn/Math.SQRT2,rb=k+3.5,SP=[1,-1,-1,1],MP=[[1,1],[1,-1],[-1,1],[-1,-1]],sq=[[1,1],[1,-1],[-1,1],[-1,-1]];
+const [f,m,p,fc,e,v,c,r,b,g]=sel(),pr=f[2],wb=f[1],mn=f[4],at=pr>=6?6:pr>=4.5?5:pr>=3?3:2,aw=pr>=6?18:pr>=4.5?16:pr>=3?10:8,bl=Math.min(60+pr*9,wb*.7),bw=f[3]+14,sb=f[3]+6,sp=f[3]/2,H=Math.max(34,27+v[4]),eT=7.8,fT=16.8,Rp=p[1]*25.4/2,L=wb/2,k=mn/Math.SQRT2,rb=k+3.5,SP=[1,-1,-1,1],MP=[[1,1],[1,-1],[-1,1],[-1,-1]],sq=[[1,1],[1,-1],[-1,1],[-1,-1]];
 const motorHeight = Math.min(m[2], 17);
 const bs=new THREE.Shape();bs.moveTo(-bw*.3,bl/2);bs.lineTo(bw*.3,bl/2);bs.lineTo(bw/2,bl*.3);bs.lineTo(bw/2,-bl*.3);bs.lineTo(bw*.3,-bl/2);bs.lineTo(-bw*.3,-bl/2);bs.lineTo(-bw/2,-bl*.3);bs.lineTo(-bw/2,bl*.3);bs.closePath();
 sq.forEach(([a,z])=>hole(bs,a*sp,z*sp,1.7));slot(bs,0,bl*.34,bw*.35,7);slot(bs,0,-bl*.34,bw*.35,7);plate(bs,at,-at/2,K,CF);
