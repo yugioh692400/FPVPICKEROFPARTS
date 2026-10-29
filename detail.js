@@ -17,7 +17,7 @@ const M={metalness:.9,roughness:.25};
 const screw=(x,y,z,r=1.5,par,rot)=>{const g=new THREE.Group();g.position.set(x,y,z);if(rot)g.rotation.set(rot[0],rot[1],rot[2]);(par||root).add(g);cy(r*1.7,.5,SIL,0,0,0,M,g);cy(r,1.4,0x2a2d33,0,.95,0,M,g,null,24);cy(r*.55,.3,BK,0,1.65,0,null,g,null,6);return g};
 const nut=(x,y,z,r=1.5)=>cy(r*1.8,r*1.2,SIL,x,y,z,M,null,null,6);
 window.build=function(){ob();
-const [f,m,p,fc,e,v,c,r,b,g,an]=sel(),pr=f[2],wb=f[1],mn=f[4],at=pr>=6?6:pr>=4.5?5:pr>=3?3:2,aw=pr>=6?18:pr>=4.5?16:pr>=3?10:8,bl=60+pr*9,bw=f[3]+14,sb=f[3]+6,sp=f[3]/2,L=wb/2,k=mn/Math.SQRT2,H=Math.max(34,27+v[4]),rxz=sb/2+8;
+const [f,m,p,fc,e,v,c,r,b,g,an]=sel(),pr=f[2],wb=f[1],mn=f[4],at=pr>=6?6:pr>=4.5?5:pr>=3?3:2,aw=pr>=6?18:pr>=4.5?16:pr>=3?10:8,bl=Math.min(60+pr*9,wb*.7),bw=f[3]+14,sb=f[3]+6,sp=f[3]/2,L=wb/2,k=mn/Math.SQRT2,H=Math.max(34,27+v[4]),rxz=sb/2+8;
 const motorHeight = Math.min(m[2], 17);
 const sr=Math.max(1,mn/10),MP=[[1,1],[1,-1],[-1,1],[-1,-1]];
 MP.forEach(([sx,sz],i)=>{const mx=sx*L/Math.SQRT2,mz=sz*L/Math.SQRT2,A=Math.atan2(mz,mx),ux=Math.cos(A),uz=Math.sin(A),vx=Math.sin(A),vz=-Math.cos(A),top=at/2+motorHeight,y0=at/2,col=[0xff7a1a,0x2fc7ff][i%3?(i==1||i==2?1:0):0];

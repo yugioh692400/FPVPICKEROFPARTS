@@ -5,59 +5,32 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FPV Drone Builder</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;font:14px system-ui,Arial,sans-serif;background:#10141a;color:#e6eaf0;height:100vh;display:grid;grid-template-columns:460px 1fr}
-aside{padding:0;overflow:auto;background:#161b22;border-right:1px solid #2b3440}
-#hd{padding:14px 16px;background:linear-gradient(90deg,#ff7a1a,#c4410c);color:#000}
-#hd h1{margin:0;color:#000;font-size:18px}
-#hd small{opacity:.85;font-size:11px}
-.r{padding:8px 14px;border-bottom:1px solid #263040}
-.r:hover{background:#1c2430}
-.cat{font-size:10px;color:#8a96a6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-.r select{width:100%;padding:6px;background:#10141a;color:#e6eaf0;border:1px solid #3a4655;border-radius:6px;font-size:13px}
-.sp{font-size:11px;color:#8a96a6;margin-top:3px;display:flex;justify-content:space-between}
-#info{margin:14px;font-size:12px;line-height:1.5}
-#info div{margin:3px 0}
-section{display:flex;flex-direction:column;min-width:0}
-.bar{display:flex;gap:8px;padding:8px;background:#1a2029;border-bottom:1px solid #2b3440;flex-wrap:wrap}
-button{background:#2b3440;color:#e6eaf0;border:0;padding:7px 12px;border-radius:6px;cursor:pointer}
-button.on{background:#ff7a1a;color:#000}
-#view{flex:1;position:relative;min-height:0}
-#c3,#wire,#bf{position:absolute;inset:0}
-#cv{width:100%;height:100%;display:block;touch-action:none}
-#wire,#bf{display:none;overflow:auto;background:#f4f6f8;color:#111;padding:18px 24px;line-height:1.5}
-#wire svg{width:100%;max-width:1000px;display:block;margin:auto}
-#wire ul,#bf div{max-width:1000px;margin:10px auto}
-#bf h2{color:#c4410c}
-#bf pre{background:#111;color:#9fe;padding:12px;border-radius:8px;overflow:auto;font-size:12px}
-#bf .stp{background:#fff;border:1px solid #d5dbe2;border-radius:8px;padding:10px 14px;margin:10px 0}
-#wt{max-width:1000px;margin:6px auto;border-collapse:collapse;font-size:12px;width:100%}
-#wt td,#wt th{border:1px solid #cfd6de;padding:4px 8px;text-align:left}
-#wt th{background:#e6ebf0}
-@media(max-width:800px){body{grid-template-columns:1fr;grid-template-rows:auto 70vh;height:auto}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 Arial,Helvetica,sans-serif;background:#f1f3f5;color:#222;height:100vh;display:flex;flex-direction:column}
+#top{background:#1b2733;color:#fff;display:flex;align-items:center;gap:6px;padding:0 16px;height:52px;flex:none;border-bottom:3px solid #3b82c4}
+.logo{font-size:20px;font-weight:700;margin-right:18px;letter-spacing:-.5px}.logo b{color:#4ea1e8}
+#top button{background:none;color:#cfd8e0;border:0;padding:15px 12px;font-size:14px;cursor:pointer;border-radius:0}#top button:hover{color:#fff;background:#25364a}#top button.on{color:#fff;box-shadow:inset 0 -3px #4ea1e8}
+#top .ex{background:#2d3f52;padding:7px 10px;margin-left:6px;border-radius:4px;font-size:12px}.sp1{flex:1}
+#view{flex:1;position:relative;min-height:0}#bld,#pick,#c3,#wire,#bf{position:absolute;inset:0;display:none;overflow:auto}#bld{display:block}
+#c3{background:#151a22;overflow:hidden}#cv{width:100%;height:100%;display:block;touch-action:none}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 40px}h1{font-size:26px;margin:6px 0 2px}.sub{color:#667;margin:0 0 14px}
+table.pt{width:100%;border-collapse:collapse;background:#fff;border:1px solid #d5d9de}table.pt th{background:#eef1f4;text-align:left;font-size:12px;color:#445;padding:8px 10px;border-bottom:1px solid #d5d9de;white-space:nowrap}
+table.pt td{padding:9px 10px;border-bottom:1px solid #e6e9ed;vertical-align:middle}table.pt tr:hover td{background:#f8fbff}
+.cn{font-weight:700;color:#1f6fb2;width:170px}.pn{color:#1f6fb2;font-weight:600;cursor:pointer}.pn:hover{text-decoration:underline}.ps{font-size:12px;color:#667}.dim{color:#889;font-style:italic}
+.btn{background:#3b82c4;color:#fff;border:0;border-radius:3px;padding:7px 12px;font-size:13px;cursor:pointer;font-weight:600}.btn:hover{background:#2f6fa9}.btn.g{background:#e3e7eb;color:#334}.btn.g:hover{background:#d3d9df}
+.tot td{background:#eef1f4;font-weight:700}
+.box{margin-top:16px;background:#fff;border:1px solid #d5d9de}.box h3{margin:0;padding:9px 12px;font-size:14px;background:#eef1f4;border-bottom:1px solid #d5d9de}.box div.m{padding:7px 12px;border-bottom:1px solid #eef0f2}
+.ok{color:#1a7f37}.warn{color:#b35c00;background:#fff7e6}.note{padding:9px 12px;font-size:12px;color:#667}
+.pk{display:flex;gap:16px;align-items:flex-start}.flt{width:230px;flex:none;background:#fff;border:1px solid #d5d9de}.flt h4{margin:0;padding:8px 10px;background:#eef1f4;font-size:13px;border-bottom:1px solid #d5d9de}.flt label{display:block;padding:3px 10px;font-size:13px;cursor:pointer}.flt div.f{padding:6px 0;border-bottom:1px solid #e6e9ed;max-height:190px;overflow:auto}
+.lst{flex:1;min-width:0}.lst input[type=text]{width:100%;padding:9px;border:1px solid #c5ccd3;border-radius:3px;margin-bottom:10px}table.pt th.s{cursor:pointer}table.pt th.s:hover{background:#dfe5ea}
+#wire,#bf{background:#f4f6f8;color:#111;padding:18px 24px}#wire svg{width:100%;max-width:1000px;display:block;margin:auto}#wire ul{max-width:1000px;margin:10px auto;font-size:13px}#bf>div{max-width:900px;margin:auto}
+#bf h2{color:#c4410c}#bf pre{background:#111;color:#9fe;padding:12px;border-radius:8px;overflow:auto;font-size:12px}#bf .stp{background:#fff;border:1px solid #d5dbe2;border-radius:8px;padding:10px 14px;margin:10px 0}
+#wt{max-width:1000px;margin:6px auto;border-collapse:collapse;font-size:12px;width:100%}#wt td,#wt th{border:1px solid #cfd6de;padding:4px 8px;text-align:left}#wt th{background:#e6ebf0}
+@media(max-width:800px){.pk{flex-direction:column}.flt{width:100%}#top{overflow:auto}}
 </style>
 </head>
 <body>
-<aside>
-<div id="hd"><h1>FPV Drone Builder</h1><small id="cnt"></small></div>
-<div id="sel"></div>
-<div id="info"></div>
-</aside>
-<section>
-<div class="bar">
-<button id="tv" class="on">3D model</button>
-<button id="tw">Wiring diagram</button>
-<button id="tb">Betaflight setup</button>
-<span style="flex:1"></span>
-<button id="eo">Download OBJ (mm)</button>
-<button id="es">Download wiring SVG</button>
-</div>
-<div id="view">
-<div id="c3"><canvas id="cv"></canvas></div>
-<div id="wire"></div>
-<div id="bf"></div>
-</div>
-</section>
+<header id="top"><div class="logo">FPV<b>PartPicker</b></div><button id="tbld" class="on">System Builder</button><button id="tv">3D Model</button><button id="tw">Wiring Diagram</button><button id="tb">Betaflight Setup</button><span class="sp1"></span><button id="eo" class="ex">Download OBJ</button><button id="es" class="ex">Download wiring SVG</button></header>
+<main id="view"><div id="bld"><div class="wrap"><h1>FPV Drone System Builder</h1><p class="sub" id="cnt"></p><div id="rows"></div><div id="info"></div></div></div><div id="pick"></div><div id="c3"><canvas id="cv"></canvas></div><div id="wire"></div><div id="bf"></div></main>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ---------- PARTS DATABASE ---------- */
@@ -173,6 +146,7 @@ q('eo').onclick=()=>{root.updateMatrixWorld(true);let t='# FPV drone model, unit
 </script>
 <script src="parts.js"></script>
 <script src="parts2.js"></script>
+<script src="parts3.js"></script>
 <script src="models.js"></script>
 <script src="detail.js"></script>
 <script src="ui.js"></script>
